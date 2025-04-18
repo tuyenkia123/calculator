@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Tiêu vừa thôi</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+<div class="container">
+    <h1>Nay tài khoản tiêu những gì thì điền vào đây cho taaaaa</h1>
+    <table id="inputTable" class="table table-bordered">
+        <thead>
+        <tr>
+            <th>Số tiền</th>
+            <th>Nội dung</th>
+            <th>Loại</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr class="inputRow">
+            <td><input type="number" name="money" placeholder="Số tiền" class="form-control"/></td>
+            <td><input type="text" name="content" placeholder="Nội dung" class="form-control"/></td>
+            <td>
+                <select name="type" class="form-control">
+                    <option th:value="0">----------------</option>
+                    <option th:each="t : ${types}" th:value="${t.name()}" th:text="${t.getValue()}"></option>
+                </select>
+            </td>
+            <td>
+                <button type="button" class="addRow btn btn-success">+</button>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <div style="display: flex; justify-content: flex-end; gap: 10px">
+        <button type="button" id="transactions" class="btn btn-dark">Vào đây để xem chi tiết</button>
+        <button type="button" id="saveButton" class="btn btn-primary">Lưu</button>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        // Thêm hàng mới
+        $(".addRow").click(function () {
+            // Clone hàng đầu tiên và xóa giá trị trong các ô input
+            const newRow = $(".inputRow").first().clone();
+            newRow.find('input').val(''); // Xóa giá trị trong các ô input
+            newRow.find('select').prop('selectedIndex', 0); // Đặt lại dropdown về giá trị mặc định
+
+            // Thay đổi nút "+" thành nút "-" để xóa hàng
+            const addButton = newRow.find('.addRow');
+            addButton.text('-').removeClass('addRow btn-success').addClass('removeRow btn-danger');
+
+            // Thêm hàng mới vào bảng
+            $("#inputTable tbody").append(newRow);
+        });
+
+        // Xóa hàng
+        $(document).on("click", ".removeRow", function () {
+            $(this).closest("tr").remove();
+        });
+
+        // Gửi dữ liệu dưới dạng JSON
+        $("#saveButton").click(function () {
+            const data = [];
+            $(".inputRow").each(function () {
+                const money = $(this).find('input[name="money"]').val();
+                const content = $(this).find('input[name="content"]').val();
+                const type = $(this).find('select[name="type"]').val();
+
+                if (money && content && type) {
+                    data.push({
+                        money: money,
+                        content: content,
+                        type: type
+                    });
+                }
+                console.log(data);
+            });
+
+            // Gọi API bằng fetch
+            fetch("/calculator/account", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            })
+                .then(response => {
+                    if (response) {
+                        window.location.replace("/calculator/form-account"); // Chuyển hướng sau khi lưu thành công
+                    } else {
+                        throw new Error("Có lỗi xảy ra khi gửi dữ liệu!");
+                    }
+                })
+                .catch(error => {
+                    alert(error.message);
+                    console.error(error);
+                });
+        });
+        $("#transactions").click(function () {
+            window.location.href = "http://localhost:8080/transaction/account"
+            // window.location.assign("transaction")
+        })
+    });
+</script>
+</body>
+</html>
