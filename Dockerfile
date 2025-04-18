@@ -1,11 +1,11 @@
-FROM maven:3.8.6-amazoncorretto-17 AS builder
+FROM maven:3.9.9-eclipse-temurin-21 AS build
 WORKDIR /calculator
-COPY pom.xml .
 COPY src ./src
-RUN mvn clean install -DskipTests
+COPY pom.xml .
+RUN mvn clean package -DskipTests
 
-FROM maven:3.8.6-amazoncorretto-17
+FROM eclipse-temurin:21-jre
 WORKDIR /calculator
-COPY --from=builder /calculator/target/*.jar calculator-0.0.1-SNAPSHOT.jar
+COPY --from=build /calculator/target/*.jar calculator-0.0.1-SNAPSHOT.jar
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "/calculator-0.0.1-SNAPSHOT.jar"]
+ENTRYPOINT ["java", "-jar", "calculator-0.0.1-SNAPSHOT.jar"]
